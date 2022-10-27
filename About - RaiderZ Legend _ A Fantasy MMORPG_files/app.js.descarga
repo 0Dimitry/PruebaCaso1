@@ -1,0 +1,127 @@
+/* 
+ Created on : Jul 17, 2017, 12:31:12 AM
+ Author     : Atta-Ur-Rehman Shah (http://attacomsian.com)
+ */
+$(function () {
+	//init 
+	init();
+	//init wow effects
+	new WOW().init();
+
+	//tooltip
+	$("[data-toggle='tooltip']").tooltip();
+
+	//popover
+	$('[data-toggle="popover"]').popover();
+
+	//scroll menu
+	$(window).scroll(function () {
+		init();
+	});
+
+	//page scroll
+	$('a.page-scroll').bind('click', function (event) {
+		var $anchor = $(this);
+		$('html, body').stop().animate({
+			scrollTop: $($anchor.attr('href')).offset().top - 70
+		}, 1500, 'easeInOutExpo');
+		event.preventDefault();
+	});
+
+	//init function
+	function init() {
+		var scroll = $(window).scrollTop();
+		if (scroll >= 0) { // defaut 200
+			$('.sticky-navigation').removeClass('navbar-transparent').addClass('bg-primary');
+			$('.sticky-navigation-alt').removeClass('navbar-transparent').addClass('bg-inverse').addClass('navbar-raised');
+		} else {
+			$('.sticky-navigation').removeClass('bg-primary').addClass('navbar-transparent');
+			$('.sticky-navigation-alt').removeClass('bg-inverse').removeClass('navbar-raised').addClass('navbar-transparent');
+		}
+		return false;
+	}
+
+	//single date picker
+	$('#datepicker').daterangepicker({
+		singleDatePicker: true
+	});
+	//date range picker
+	$('#daterange').daterangepicker({
+		opens: 'left',
+		autoApply: true
+	});
+});
+
+
+function mlog(log) {
+	console.log(log);
+}
+
+function msg_error(text) {
+	var msg = '<div class="nk-info-box text-danger">  <div class="nk-info-box-icon">  <i class="ion-close-round"></i>  </div>  <h3>Error!</h3>  <em>' + text + ' </em>  </div>';
+
+	return msg;
+}
+
+function msg_sucess(text) {
+	var msg = '<div class="nk-info-box text-success"><div class="nk-info-box-icon"><i class="ion-checkmark-round"></i></div><h3>Success!</h3><em>' + text + '</em>        </div>';
+	return msg;
+}
+
+$('form').submit(function (event) {
+	var dados = jQuery(this).serialize();
+	var msg;
+	$('#feedback').html('Loading...');
+	$form = $(this); //wrap this in jQuery
+	if ($form.attr('target') == "_blank") {
+		console.log("Vamos cancelar o ajax");
+	} else {
+		jQuery.ajax({
+			type: "POST",
+			url: "/ajax/index.php",
+			dataType: "json",
+			//dataType:"html",
+			data: dados,
+			success: function (data) {
+
+				switch (data.type) {
+					case 0: //Mensagem sem formatação
+						msg = data.msg;
+						break;
+					case 1:
+						msg = msg_error(data.msg);
+						break;
+					case 2:
+						msg = msg_sucess(data.msg);
+						break;
+					case 3: // nova conta registrada
+						//move para a tela de ativar a conta
+						$("#register").html(msg_send_confirmation(data.mail));
+						//msg = msg_sucess(data.msg);
+						break;
+					default:
+						// code block
+						mlog("Data type: Default");
+						msg = data.msg;
+
+				}
+
+				console.log(data);	
+				$('#' + data.rtn).html(msg);
+				console.log(msg); 
+			},
+			error: function (request, status, error) {
+				console.log(request, status, error);
+				$("#register").html(error);
+				alert('Sorry there was an error processing your request!');	
+			}
+		});
+		event.preventDefault();
+	}
+});
+
+
+function msg_send_confirmation(mail) {
+	var msg = '<div class="text-center"> <strong class="text-white h1">RaiderZ Legend</strong> <div class="divider"></div> <p>One Last Step! Just Confirm Your E-Mail Address To Take The First Step On The Journey To Play!</p> <div class="divider"></div> <div class="alert alert-dark"> <h1 class="fas fa-envelope"></h1><br> <p> We sent the email with the verification link to</p> <strong>' + mail + '</strong> </div> <div class="divider"></div> <div> <p> Can not find the email? Re send verification email</p> </div> </div> instalar o jogo';
+	return msg;
+}
